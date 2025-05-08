@@ -2,6 +2,7 @@ package goauth
 
 import (
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -28,6 +29,29 @@ func VerifyToken(tokenString string) (*Claims, error) {
 	}
 
 	return nil, errors.New("unknown claims type, cannot proceed")
+}
+
+func ClaimsFromBearerToken(token string) (*Claims, error) {
+	splited := strings.Split(token, " ")
+	if len(splited) > 1 {
+		token = splited[1]
+	} else {
+		token = splited[0]
+	}
+	if token == "" {
+		return nil, errors.New("authorization header missing")
+	}
+
+	claims, err := VerifyToken(token)
+
+	if err != nil {
+		if err == jwt.ErrSignatureInvalid {
+			return nil, errors.New("invalid token signature")
+
+		}
+		return nil, errors.New("invalid token signature")
+	}
+	return claims, nil
 }
 
 func GenerateToken(id string, refresh bool) (string, error) {
